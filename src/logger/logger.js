@@ -1,6 +1,21 @@
 import pino from "pino";
 import fs from "fs";
+import path from "path";
 
+// Ensure the logs directory exists
+const logsDir = path.resolve('../../', "logs");
+if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir);
+}
+// Ensure log files exist
+const errorLogPath = path.join(logsDir, "error.log");
+const appLogPath = path.join(logsDir, "app.log");
+if (!fs.existsSync(errorLogPath)) {
+    fs.writeFileSync(errorLogPath, "");
+}
+if (!fs.existsSync(appLogPath)) {
+    fs.writeFileSync(appLogPath, "");
+}
 /**
  * Error logger – writes error level logs to `logs/error.log` and the console.
  */
@@ -62,5 +77,5 @@ const infoLogger = pino({
 errorLogger.info("Error logger is initialized");
 infoLogger.info("Info logger is initialized");
 
-export default {errorLogger, infoLogger};
-export {errorLogger, infoLogger};
+export default { errorLogger, infoLogger };
+export { errorLogger, infoLogger };
