@@ -1,6 +1,6 @@
 import express from 'express'
-import studentRoutes from '../routes/student.route.js'
-import { errorHandler } from '../middleware/error.middleware.js'
+import studentRoutes from './src/routes/student.route.js'
+import { errorHandler } from './src/middleware/error.middleware.js'
 const app = express();
 app.use(express.json());
 

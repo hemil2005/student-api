@@ -1,6 +1,7 @@
+import logger from '../logger/logger.js';
 import { students } from '../data/students.js';
-import NotFoundError from "../src/errors/NotFoundError.js";
-import ConflictError from "../src/errors/ConflictError.js";
+import NotFoundError from "../errors/NotFoundError.js";
+import ConflictError from "../errors/ConflictError.js";
 export function getAllStudents() {
     return students;
 }

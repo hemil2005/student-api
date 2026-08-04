@@ -1,0 +1,27 @@
+[2026-08-04 21:09:58.309 +0530] [31mERROR[39m: [36mthis is error[39m
+    [35musername[39m: "hemil"
+[2026-08-04 21:09:58.309 +0530] [32mINFO[39m: [36mthis is info[39m
+[2026-08-04 21:09:58.309 +0530] [33mWARN[39m: [36mthis is warn[39m
+[2026-08-04 21:09:58.309 +0530] [31mERROR[39m: [36mthis is error[39m
+    [35mmodule[39m: "app"
+[2026-08-04 21:10:13.857 +0530] [31mERROR[39m: [36mStudent not found[39m
+    err: {
+      "type": "NotFoundError",
+      "message": "Student not found",
+      "stack":
+          NotFoundError: Student not found
+              at Module.getStudentById (file:///D:/own%20learning%20backend/practise/student-api/src/services/student.service.js:11:15)
+              at getStudentById (file:///D:/own%20learning%20backend/practise/student-api/src/controllers/student.controller.js:9:36)
+              at Layer.handleRequest (D:\own learning backend\practise\student-api\node_modules\router\lib\layer.js:152:17)
+              at next (D:\own learning backend\practise\student-api\node_modules\router\lib\route.js:157:13)
+              at Route.dispatch (D:\own learning backend\practise\student-api\node_modules\router\lib\route.js:117:3)
+              at handle (D:\own learning backend\practise\student-api\node_modules\router\index.js:435:11)
+              at Layer.handleRequest (D:\own learning backend\practise\student-api\node_modules\router\lib\layer.js:152:17)
+              at D:\own learning backend\practise\student-api\node_modules\router\index.js:295:15
+              at param (D:\own learning backend\practise\student-api\node_modules\router\index.js:600:14)
+              at param (D:\own learning backend\practise\student-api\node_modules\router\index.js:610:14)
+      "statusCode": 404,
+      "status": "fail",
+      "isOperational": true,
+      "name": "NotFoundError"
+    }

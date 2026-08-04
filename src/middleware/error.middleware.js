@@ -4,11 +4,12 @@
 // returns appropriate status code like 404, 401, 403
 import dotenv from 'dotenv';
 dotenv.config();
+import logger from "../logger/logger.js";
 export function errorHandler(err, req, res, next) {
     const statusCode = err.statusCode || 500;
     const status = err.status || 'error';
 
-    console.error(err); // Log the error for debugging
+    logger.error(err); // Log the error for debugging
 
     res.status(statusCode).json({
         message: err.message,

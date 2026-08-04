@@ -1,5 +1,5 @@
 import { z } from "zod";
-import ValidationError from "../src/errors/ValidationError.js";
+import ValidationError from "../errors/ValidationError.js";
 const studentSchema = z.object({
     name: z.string().min(3).max(50).trim(),
     age: z.number().min(16).max(100).int(),
