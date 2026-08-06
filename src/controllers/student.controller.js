@@ -12,7 +12,7 @@ export async function getStudentById(req, res) {
 
 export async function createStudent(req, res) {
     const student = req.body;
-    const createdStudent = await studentService.createStudentWithLog(student);
+    const createdStudent = await studentService.createStudent(student);
     res.status(201).json(createdStudent);
 }
 

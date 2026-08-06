@@ -49,19 +49,3 @@ export async function deleteStudent(id) {
     }
     return result.rows[0];
 }
-
-export async function createStudentWithLog(student) {
-    const client = await pool.connect();
-    try {
-        await client.query("BEGIN");
-        const result = await client.query("INSERT INTO students (name, age, course) VALUES ($1, $2, $3) RETURNING *;", [student.name, student.age, student.course]);
-        await client.query("INSERT INT student_logs(student_id, action) VALUES ($1, $2);", [result.rows[0].id, "Student created"]);
-        await client.query("COMMIT");
-        return result.rows[0];
-    } catch (error) {
-        await client.query("ROLLBACK");
-        throw error;
-    } finally {
-        client.release();
-    }
-}
