@@ -1,0 +1,6 @@
+CREATE TABLE students (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    age INT NOT NULL,
+    course TEXT NOT NULL
+);
