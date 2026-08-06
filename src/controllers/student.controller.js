@@ -1,12 +1,12 @@
 import * as studentService from '../services/student.service.js'
-export function getALLStudents(req, res) {
-    const students = studentService.getAllStudents();
+export async function getALLStudents(req, res) {
+    const students = await studentService.getAllStudents();
     res.status(200).json(students);
 }
 
-export function getStudentById(req, res) {
+export async function getStudentById(req, res) {
     const id = Number(req.params.id);
-    const student = studentService.getStudentById(id);
+    const student = await studentService.getStudentById(id);
     res.status(200).json(student);
 }
 
