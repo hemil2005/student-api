@@ -10,21 +10,21 @@ export async function getStudentById(req, res) {
     res.status(200).json(student);
 }
 
-export function createStudent(req, res) {
+export async function createStudent(req, res) {
     const student = req.body;
-    const createdStudent = studentService.createStudent(student);
+    const createdStudent = await studentService.createStudentWithLog(student);
     res.status(201).json(createdStudent);
 }
 
-export function updateStudent(req, res) {
+export async function updateStudent(req, res) {
     const id = Number(req.params.id);
     const data = req.body;
-    const updatedStudent = studentService.updateStudent(id, data);
+    const updatedStudent = await studentService.updateStudent(id, data);
     res.status(200).json(updatedStudent);
 }
 
-export function deleteStudent(req, res) {
+export  async function deleteStudent(req, res) {
     const id = Number(req.params.id);
-    const deletedStudent = studentService.deleteStudent(id);
+    const deletedStudent = await studentService.deleteStudent(id);
     res.status(200).json(deletedStudent);
 }
