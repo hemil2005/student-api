@@ -1,51 +1,73 @@
 import logger from '../logger/logger.js';
 import NotFoundError from "../errors/NotFoundError.js";
 import ConflictError from "../errors/ConflictError.js";
-import pool from '../config/database.js';
+import prisma from '../config/prisma.js';
+import { Prisma } from '..generated/prisma/client';
+
 
 export async function getAllStudents() {
     logger.info("Fetching all students");
-    const result = await pool.query("SELECT * FROM students;");
-    return result.rows;
+    const result = await prisma.students.findMany();
+    return result;
 }
 
 export async function getStudentById(id) {
     logger.info("Getting student by id");
-    const result = await pool.query("SELECT * FROM students WHERE id = $1;", [id]);
-    if (result.rows.length === 0) {
+    // findUnique returns null (not throws) when not found — if-check is correct here
+    const result = await prisma.students.findUnique({ where: { id } });
+    if (!result) {
         logger.error("Student not found");
         throw new NotFoundError("Student not found");
     }
-    return result.rows[0];
+    return result;
 }
 
 export async function createStudent(student) {
     logger.info("Creating student");
-    const check = await pool.query("SELECT * FROM students WHERE name = $1 AND age = $2 AND course = $3;", [student.name, student.age, student.course]);
-    if (check.rows.length > 0) {
+    const check = await prisma.students.findFirst({
+        where: { name: student.name, age: student.age, course: student.course }
+    });
+    if (check) {
         logger.error("Student already exists");
         throw new ConflictError("Student already exists");
     }
-    const result = await pool.query("INSERT INTO students (name, age, course) VALUES ($1, $2, $3) RETURNING *;", [student.name, student.age, student.course]);
-    return result.rows[0];
+    const result = await prisma.students.create({ data: student });
+    return result;
 }
 
 export async function updateStudent(id, data) {
     logger.info("Updating student");
-    const result = await pool.query("UPDATE students SET name = COALESCE($1, name), age = COALESCE($2, age), course = COALESCE($3, course) WHERE id = $4 RETURNING *;", [data.name, data.age, data.course, id]);
-    if (result.rows.length === 0) {
-        logger.error("Student not found");
-        throw new NotFoundError("Student not found");
+    // prisma.update throws P2025 (not returns null) when record not found
+    try {
+        const result = await prisma.students.update({
+            where: { id },
+            data: {
+                name: data.name,
+                age: data.age,
+                course: data.course
+            }
+        });
+        return result;
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+            logger.error("Student not found");
+            throw new NotFoundError("Student not found");
+        }
+        throw error;
     }
-    return result.rows[0];
 }
 
 export async function deleteStudent(id) {
     logger.info("Deleting student");
-    const result = await pool.query("DELETE FROM students WHERE id = $1 RETURNING *;", [id]);
-    if (result.rows.length === 0) {
-        logger.error("Student not found");
-        throw new NotFoundError("Student not found");
+    // prisma.delete throws P2025 (not returns null) when record not found
+    try {
+        const result = await prisma.students.delete({ where: { id } });
+        return result;
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+            logger.error("Student not found");
+            throw new NotFoundError("Student not found");
+        }
+        throw error;
     }
-    return result.rows[0];
 }
