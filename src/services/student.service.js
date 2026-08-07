@@ -2,12 +2,14 @@ import logger from '../logger/logger.js';
 import NotFoundError from "../errors/NotFoundError.js";
 import ConflictError from "../errors/ConflictError.js";
 import prisma from '../config/prisma.js';
-import { Prisma } from '..generated/prisma/client';
+import { Prisma } from '../generated/prisma/index.js';
 
 
 export async function getAllStudents() {
     logger.info("Fetching all students");
-    const result = await prisma.students.findMany();
+    const result = await prisma.students.findMany({
+        include: { courses: true }
+    });
     return result;
 }
 
@@ -25,7 +27,7 @@ export async function getStudentById(id) {
 export async function createStudent(student) {
     logger.info("Creating student");
     const check = await prisma.students.findFirst({
-        where: { name: student.name, age: student.age, course: student.course }
+        where: { name: student.name, age: student.age, course_id: student.course_id }
     });
     if (check) {
         logger.error("Student already exists");
@@ -44,7 +46,7 @@ export async function updateStudent(id, data) {
             data: {
                 name: data.name,
                 age: data.age,
-                course: data.course
+                course_id: data.course_id
             }
         });
         return result;

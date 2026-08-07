@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "predev": "prisma generate",
     "dev": "nodemon server.js",
     "auto": "node --watch server.js"
   },
