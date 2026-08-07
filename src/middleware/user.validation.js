@@ -1,12 +1,12 @@
 import { z } from "zod";
 import ValidationError from "../errors/ValidationError.js";
-const studentSchema = z.object({
+const userSchema = z.object({
     name: z.string().min(3).max(50).trim(),
-    age: z.number().min(16).max(100).int(),
-    course_id: z.number()
+    email: z.string().email().trim(),
+    password: z.string().min(6).max(20)
 })
-export function validateStudent(req, res, next) {
-    const result = studentSchema.safeParse(req.body);
+export function validateUser(req, res, next) {
+    const result = userSchema.safeParse(req.body);
     if (!result.success) {
         throw new ValidationError(result.error.issues);
     }

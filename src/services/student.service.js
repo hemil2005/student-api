@@ -16,7 +16,10 @@ export async function getAllStudents() {
 export async function getStudentById(id) {
     logger.info("Getting student by id");
     // findUnique returns null (not throws) when not found — if-check is correct here
-    const result = await prisma.students.findUnique({ where: { id } });
+    const result = await prisma.students.findUnique({
+        where: { id },
+        include: { courses: true }
+    });
     if (!result) {
         logger.error("Student not found");
         throw new NotFoundError("Student not found");
