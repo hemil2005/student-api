@@ -4,6 +4,7 @@ import ConflictError from "../errors/ConflictError.js";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
 import logger from "../logger/logger.js";
 import { createJWT } from "../utils/jwt.js";
+import NotFoundError from "../errors/NotFoundError.js";
 
 export async function registerUser(user) {
     logger.info("Registering user");
@@ -16,12 +17,14 @@ export async function registerUser(user) {
         data: {
             name: user.name,
             email: user.email,
-            password: hashedPassword
+            password: hashedPassword,
+            role: "user"
         },
         select: {
             id: true,
             name: true,
             email: true,
+            role: true,
             created_at: true,
         }
     });
@@ -37,7 +40,8 @@ export async function loginUser(email, password) {
             id: true,
             email: true,
             password: true,
-            name: true
+            name: true,
+            role: true
         }
     })
     if (!result) {
@@ -52,13 +56,39 @@ export async function loginUser(email, password) {
     //     email: result.email,
     //     name: result.name
     // };
-    const token = createJWT({ id: result.id });
+    const token = createJWT({
+        id: result.id,
+        role: result.role
+    });
     return {
         token,
         user: {
             id: result.id,
             name: result.name,
-            email: result.email
+            email: result.email,
+            role: result.role
         },
     };
+}
+export async function grantAdminAccess(userID){
+    logger.info("Granting admin access to user");
+    const user = await prisma.users.findUnique({where: {id:userID}});
+    if(!user){
+        throw new NotFoundError("User not found");
+    }
+    if(user.role === "admin"){
+        throw new ConflictError("User is already an admin");
+    }
+    const updatedUser = await prisma.users.update({
+        where: {id:userID},
+        data: {role:"admin"},
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+        }
+    });
+    logger.info("Admin access granted successfully");
+    return updatedUser;
 }
