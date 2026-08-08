@@ -27,6 +27,7 @@ model courses {
   name     String     @unique @db.VarChar(100)
   students students[]
 }
+
 model users {
   id         Int      @id @default(autoincrement())
   name       String

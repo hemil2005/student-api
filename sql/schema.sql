@@ -34,3 +34,8 @@ UPDATE students
 SET course_id = courses.id
 FROM courses
 WHERE students.course = courses.name;
+select * from users;
+INSERT INTO users(name, email, password)
+VALUES
+('Hemil', 'hemil.shah2020@gmail.com','12345' ),
+('JR Shah', 'jrshah52@gmail.com', '12345');
