@@ -3,7 +3,7 @@ import NotFoundError from "../errors/NotFoundError.js";
 import ConflictError from "../errors/ConflictError.js";
 import prisma from '../config/prisma.js';
 import { Prisma } from '../generated/prisma/index.js';
-
+import { createStudentLog } from './studentlog.service.js';
 
 export async function getAllStudents() {
     logger.info("Fetching all students");
@@ -36,7 +36,16 @@ export async function createStudent(student) {
         logger.error("Student already exists");
         throw new ConflictError("Student already exists");
     }
-    const result = await prisma.students.create({ data: student });
+    const result = await prisma.$transaction(async (tx) => {
+        const newStudent = await tx.students.create({ data: student });
+        await tx.student_logs.create({
+            data: {
+                student_id: newStudent.id,
+                action: "Student created"
+            }
+        });
+        return newStudent;
+    })
     return result;
 }
 
@@ -52,6 +61,7 @@ export async function updateStudent(id, data) {
                 course_id: data.course_id
             }
         });
+        await createStudentLog(result.id, "Student updated");
         return result;
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
@@ -67,6 +77,7 @@ export async function deleteStudent(id) {
     // prisma.delete throws P2025 (not returns null) when record not found
     try {
         const result = await prisma.students.delete({ where: { id } });
+        await createStudentLog(id, "Student deleted");
         return result;
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
