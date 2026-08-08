@@ -38,12 +38,7 @@ export async function createStudent(student) {
     }
     const result = await prisma.$transaction(async (tx) => {
         const newStudent = await tx.students.create({ data: student });
-        await tx.student_logs.create({
-            data: {
-                student_id: newStudent.id,
-                action: "Student created"
-            }
-        });
+        await createStudentLog(newStudent.id, "Student created", tx);
         return newStudent;
     })
     return result;
@@ -53,7 +48,8 @@ export async function updateStudent(id, data) {
     logger.info("Updating student");
     // prisma.update throws P2025 (not returns null) when record not found
     try {
-        const result = await prisma.students.update({
+        const result = await prisma.$transaction(async (tx)=>{
+        const updatedStudent = await tx.students.update({
             where: { id },
             data: {
                 name: data.name,
@@ -61,8 +57,10 @@ export async function updateStudent(id, data) {
                 course_id: data.course_id
             }
         });
-        await createStudentLog(result.id, "Student updated");
-        return result;
+        await createStudentLog(updatedStudent.id, "Student updated", tx);
+        return updatedStudent;
+    })
+    return result;
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
             logger.error("Student not found");
@@ -76,9 +74,13 @@ export async function deleteStudent(id) {
     logger.info("Deleting student");
     // prisma.delete throws P2025 (not returns null) when record not found
     try {
-        const result = await prisma.students.delete({ where: { id } });
-        await createStudentLog(id, "Student deleted");
-        return result;
+        const result = await prisma.$transaction(async (tx)=>{
+        const deletedStudent = await tx.students.delete({ where: { id } });
+        await createStudentLog(deletedStudent.id, "Student deleted", tx);
+        return deletedStudent;
+    })
+        
+    return result;
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
             logger.error("Student not found");
