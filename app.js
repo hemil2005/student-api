@@ -1,6 +1,7 @@
 import express from 'express'
 import studentRoutes from './src/routes/student.route.js'
 import userRoutes from './src/routes/user.route.js'
+import courseRoutes from './src/routes/course.route.js'
 import { errorHandler } from './src/middleware/error.middleware.js'
 const app = express();
 app.use(express.json());
@@ -10,6 +11,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/students', studentRoutes);
+app.use('/courses', courseRoutes);
 app.use('/users', userRoutes);
 
 // Error handling middleware must be registered after routes

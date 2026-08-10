@@ -9,3 +9,12 @@ export async function createStudentLog(studentId, action, tx = prisma) {
         }
     })
 }
+
+export async function getStudentLogs(studentId, tx = prisma) {
+    logger.info("Getting student logs");
+    return await tx.student_logs.findMany({
+        where: {
+            student_id: studentId
+        }
+    })
+}
