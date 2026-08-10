@@ -1,11 +1,16 @@
 import * as studentService from '../services/student.service.js'
 export async function getALLStudents(req, res) {
-    const students = await studentService.getAllStudents();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const students = await studentService.getAllStudents(page, limit);
     res.status(200).json(students);
 }
 
 export async function getStudentById(req, res) {
     const id = Number(req.params.id);
+    if (isNaN(id)) {
+        return res.status(400).json({ status: "error", message: "Invalid student ID" });
+    }
     const student = await studentService.getStudentById(id);
     res.status(200).json(student);
 }

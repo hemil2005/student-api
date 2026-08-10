@@ -5,12 +5,28 @@ import prisma from '../config/prisma.js';
 import { Prisma } from '../generated/prisma/index.js';
 import { createStudentLog } from './studentlog.service.js';
 
-export async function getAllStudents() {
+export async function getAllStudents(page = 1, limit = 10) {
     logger.info("Fetching all students");
-    const result = await prisma.students.findMany({
-        include: { courses: true }
-    });
-    return result;
+    const skip = (page - 1) * limit;
+
+    const [data, totalRecords] = await Promise.all([
+        prisma.students.findMany({
+            skip,
+            take: limit,
+            include: { courses: true }
+        }),
+        prisma.students.count()
+    ]);
+
+    return {
+        data,
+        meta: {
+            page,
+            limit,
+            totalRecords,
+            totalPages: Math.ceil(totalRecords / limit)
+        }
+    };
 }
 
 export async function getStudentById(id) {

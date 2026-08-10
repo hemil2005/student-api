@@ -14,7 +14,7 @@ export function authenticate(req, res, next) {
     try {
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decodedToken;
-        logger.info("User authenticated successfully");
+        logger.info(`User authenticated successfully ${decodedToken.email}`)
         next();
     } catch (error) {
         throw new UnauthorizedError("Invalid or expired token");
