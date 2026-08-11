@@ -2,6 +2,7 @@ import pino from "pino";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import config from "../config/env.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,7 +30,7 @@ const filePrettyOptions = {
 };
 
 const logger = pino({
-    level: process.env.NODE_ENV === "production" ? "error" : "info",
+    level: config.nodeEnv === "production" ? "error" : "info",
     transport: {
         targets: [
             // ── 1. Console – colored, all levels ──────────────────────────

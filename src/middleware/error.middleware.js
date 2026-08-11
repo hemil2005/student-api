@@ -2,9 +2,9 @@
 // returns a proper standardized error response to the client
 // logs the error to the console later logger file
 // returns appropriate status code like 404, 401, 403
-import dotenv from 'dotenv';
-dotenv.config();
 import logger from "../logger/logger.js";
+import config from "../config/env.js";
+
 export function errorHandler(err, req, res, next) {
     const statusCode = err.statusCode || 500;
     const status = err.status || 'error';
@@ -18,6 +18,6 @@ export function errorHandler(err, req, res, next) {
         isOperational: err.isOperational,
         name: err.name,
         details: err.details,
-        stack: process.env.NODE_ENV === "development" ? err.stack : {}
+        stack: config.nodeEnv === "development" ? err.stack : {}
     });
 }

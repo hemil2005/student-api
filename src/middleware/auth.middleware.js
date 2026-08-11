@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 import logger from "../logger/logger.js";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
+import config from "../config/env.js";
+
 export function authenticate(req, res, next) {
     logger.info("Authenticating user");
     
@@ -12,7 +14,7 @@ export function authenticate(req, res, next) {
     const token = authHeader.split(" ")[1];
     
     try {
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        const decodedToken = jwt.verify(token, config.jwtSecret);
         req.user = decodedToken;
         logger.info(`User authenticated successfully ${decodedToken.email}`)
         next();
