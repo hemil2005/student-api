@@ -12,6 +12,9 @@ const config = {
         name: process.env.DB_NAME,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
+    },
+    redis: {
+        url: process.env.REDIS_URL,
     }
 }
 
