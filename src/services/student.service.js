@@ -5,13 +5,16 @@ import prisma from '../config/prisma.js';
 import { Prisma } from '../generated/prisma/index.js';
 import { createStudentLog } from './studentlog.service.js';
 
-export async function getAllStudents(page = 1, limit = 10, courseId, orderBy) {
+export async function getAllStudents(page = 1, limit = 10, courseId, orderBy, search) {
     logger.info("Fetching all students");
     const skip = (page - 1) * limit;
 
     const where = {};
     if (courseId !== undefined) {
         where.course_id = courseId;
+    }
+    if (search !== undefined && search.trim() !== '') {
+        where.name = { contains: search.trim(), mode: 'insensitive' };
     }
 
     const [data, totalRecords] = await Promise.all([

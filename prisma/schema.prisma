@@ -12,14 +12,18 @@ model student_logs {
   student_id Int
   action     String
   created_at DateTime? @default(now()) @db.Timestamp(6)
+  student    students  @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_student_logs_students")
 }
 
 model students {
-  id        Int      @id @default(autoincrement())
-  name      String
-  age       Int
-  course_id Int?
-  courses   courses? @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_students_courses")
+  id           Int            @id @default(autoincrement())
+  name         String
+  age          Int
+  course_id    Int?
+  courses      courses?       @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_students_courses")
+  student_logs student_logs[]
+
+  @@index([course_id])
 }
 
 model courses {
