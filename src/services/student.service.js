@@ -4,6 +4,7 @@ import ConflictError from "../errors/ConflictError.js";
 import prisma from '../config/prisma.js';
 import { Prisma } from '../generated/prisma/index.js';
 import { createStudentLog } from './studentlog.service.js';
+import redisClient from '../config/redis.js';
 
 export async function getAllStudents(page = 1, limit = 10, courseId, orderBy, search) {
     logger.info("Fetching all students");
@@ -42,6 +43,11 @@ export async function getAllStudents(page = 1, limit = 10, courseId, orderBy, se
 export async function getStudentById(id) {
     logger.info("Getting student by id");
     // findUnique returns null (not throws) when not found — if-check is correct here
+    const cached = await redisClient.get(`student:${id}`);
+    if (cached) {
+        logger.info(`Student:${id} found in cache`);
+        return JSON.parse(cached);
+    }
     const result = await prisma.students.findUnique({
         where: { id },
         include: { courses: true }
@@ -50,6 +56,8 @@ export async function getStudentById(id) {
         logger.error("Student not found");
         throw new NotFoundError("Student not found");
     }
+    await redisClient.set(`student:${id}`, JSON.stringify(result), { EX: 3600 }); // cache for 1 hour
+    logger.info(`Student:${id} fetched from db`);
     return result;
 }
 
@@ -86,6 +94,8 @@ export async function updateStudent(id, data) {
         await createStudentLog(updatedStudent.id, "Student updated", tx);
         return updatedStudent;
     })
+    await redisClient.del(`student:${id}`);
+    logger.info(`Cache invalidated for student:${id}`);
     return result;
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
@@ -105,7 +115,8 @@ export async function deleteStudent(id) {
         await createStudentLog(deletedStudent.id, "Student deleted", tx);
         return deletedStudent;
     })
-        
+    await redisClient.del(`student:${id}`);
+    logger.info(`Cache invalidated for student:${id}`);
     return result;
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
