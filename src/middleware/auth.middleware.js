@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import logger from "../logger/logger.js";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
 import config from "../config/env.js";
+import { verifyRefreshJWT } from "../utils/jwt.js";
 
 export function authenticate(req, res, next) {
     logger.info("Authenticating user");
@@ -21,4 +22,17 @@ export function authenticate(req, res, next) {
     } catch (error) {
         throw new UnauthorizedError("Invalid or expired token");
     }
+}
+export async function authenticateRefresh(req, res, next) {
+    logger.info("Authenticating refresh token");
+
+    const { refresh_token } = req.body;
+    if (!refresh_token) {
+        throw new UnauthorizedError("Refresh token is required");
+    }
+
+    const decodedToken = verifyRefreshJWT(refresh_token);
+    req.user = decodedToken;
+    logger.info(`Refresh token valid for user:${decodedToken.id}`);
+    next();
 }

@@ -4,6 +4,7 @@ dotenv.config();
 const config = {
     port: Number(process.env.PORT) || 3000,
     jwtSecret: process.env.JWT_SECRET,
+    jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
     nodeEnv: process.env.NODE_ENV || "development",
     databaseUrl: process.env.DATABASE_URL,
     db: {
@@ -21,6 +22,7 @@ const config = {
 const checkConfig = () => {
     const missingKeys = [];
     if (!config.jwtSecret) missingKeys.push("JWT_SECRET");
+    if (!config.jwtRefreshSecret) missingKeys.push("JWT_REFRESH_SECRET");
     if (!config.databaseUrl) missingKeys.push("DATABASE_URL");
 
     if (missingKeys.length > 0) {

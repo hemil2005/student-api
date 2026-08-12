@@ -1,4 +1,5 @@
 import * as userService from '../services/user.service.js'
+
 export async function registerUser(req, res) {
     const user = req.body;
     const createdUser = await userService.registerUser(user);
@@ -19,3 +20,14 @@ export async function grantAdminAccess(req, res) {
         user: updatedUser
     });
 }
+
+export async function refreshToken(req, res) {
+    const userId = req.user.id;           // set by authenticateRefresh middleware
+    const { refresh_token } = req.body;
+    const result = await userService.refreshToken(userId, refresh_token);
+    res.status(200).json({
+        status: "success",
+        token: result.token,
+        refresh_token: result.refresh_token
+    });
+}

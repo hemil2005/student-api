@@ -3,8 +3,9 @@ import prisma from '../config/prisma.js'
 import ConflictError from "../errors/ConflictError.js";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
 import logger from "../logger/logger.js";
-import { createJWT } from "../utils/jwt.js";
+import { createJWT, createRefreshJWT, verifyRefreshJWT } from "../utils/jwt.js";
 import NotFoundError from "../errors/NotFoundError.js";
+import redisClient from "../config/redis.js";
 
 export async function registerUser(user) {
     logger.info("Registering user");
@@ -60,8 +61,14 @@ export async function loginUser(email, password) {
         id: result.id,
         role: result.role
     });
+    const refresh_token = createRefreshJWT({
+        id: result.id,
+        role: result.role
+    });
+    await redisClient.set(`user:${result.id}`, JSON.stringify(refresh_token), { EX: 30 * 24 * 60 * 60 });
     return {
         token,
+        refresh_token,
         user: {
             id: result.id,
             name: result.name,
@@ -91,4 +98,30 @@ export async function grantAdminAccess(userID){
     });
     logger.info("Admin access granted successfully");
     return updatedUser;
+}
+
+export async function refreshToken(userId, incomingRefreshToken) {
+    logger.info(`Refreshing token for user:${userId}`);
+
+    // 1. Verify the JWT signature and expiry first
+    const decoded = verifyRefreshJWT(incomingRefreshToken);
+
+    // 2. Check the token stored in Redis — reject if revoked or mismatched
+    const storedToken = await redisClient.get(`user:${userId}`);
+    if (!storedToken) {
+        throw new UnauthorizedError("Refresh token not found — please log in again");
+    }
+    if (JSON.parse(storedToken) !== incomingRefreshToken) {
+        throw new UnauthorizedError("Refresh token mismatch — please log in again");
+    }
+
+    // 3. Rotate: issue new access + refresh tokens
+    const newAccessToken = createJWT({ id: decoded.id, role: decoded.role });
+    const newRefreshToken = createRefreshJWT({ id: decoded.id, role: decoded.role });
+
+    // 4. Replace old refresh token in Redis (30-day TTL resets)
+    await redisClient.set(`user:${userId}`, JSON.stringify(newRefreshToken), { EX: 30 * 24 * 60 * 60 });
+
+    logger.info(`Token refreshed successfully for user:${userId}`);
+    return { token: newAccessToken, refresh_token: newRefreshToken };
 }
