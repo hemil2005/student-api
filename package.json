@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
     "predev": "prisma generate",
     "dev": "nodemon server.js",
     "auto": "node --watch server.js"
@@ -31,6 +34,8 @@
   },
   "devDependencies": {
     "dotenv": "^17.4.2",
-    "prisma": "^7.9.1"
+    "prisma": "^7.9.1",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.10"
   }
 }
