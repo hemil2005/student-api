@@ -83,6 +83,17 @@ const openapiSpecification = {
                         description: "Students retrieved successfully",
                         content: {
                             "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: { type: "string", example: "success" },
+                                        data: {
+                                            type: "array",
+                                            items: { $ref: "#/components/schemas/Student" }
+                                        },
+                                        meta: { $ref: "#/components/schemas/PaginationMeta" }
+                                    }
+                                },
                                 example: {
                                     status: "success",
                                     data: [
@@ -122,28 +133,12 @@ const openapiSpecification = {
                     content: {
                         "application/json": {
                             schema: {
-                                type: "object",
-                                required: ["name", "age", "course_id"],
-                                properties: {
-                                    name: {
-                                        type: "string",
-                                        minLength: 3,
-                                        maxLength: 50
-                                    },
-                                    age: {
-                                        type: "integer",
-                                        minimum: 16,
-                                        maximum: 100
-                                    },
-                                    course_id: {
-                                        type: "integer"
-                                    }
-                                },
-                                example: {
-                                    name: "John Doe",
-                                    age: 21,
-                                    course_id: 6
-                                }
+                                $ref: "#/components/schemas/CreateStudentRequest"
+                            },
+                            example: {
+                                name: "John Doe",
+                                age: 21,
+                                course_id: 6
                             }
                         }
                     }
@@ -224,6 +219,13 @@ const openapiSpecification = {
                         description: "Student retrieved successfully",
                         content: {
                             "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: { type: "string", example: "success" },
+                                        data: { $ref: "#/components/schemas/Student" }
+                                    }
+                                },
                                 example: {
                                     status: "success",
                                     data: {
@@ -804,6 +806,50 @@ const openapiSpecification = {
                 type: "http",
                 scheme: "bearer",
                 bearerFormat: "JWT"
+            }
+        },
+        schemas: {
+            Student: {
+                type: "object",
+                required: ["id", "name", "age"],
+                properties: {
+                    id: { type: "integer", example: 1 },
+                    name: { type: "string", minLength: 3, maxLength: 50, example: "Hemil" },
+                    age: { type: "integer", minimum: 16, maximum: 100, example: 20 },
+                    course_id: {
+                        type: "integer",
+                        nullable: true,
+                        example: 1,
+                        description: "Null when student is not enrolled in a course"
+                    },
+                    courses: {
+                        type: "object",
+                        nullable: true,
+                        properties: {
+                            id: { type: "integer", example: 1 },
+                            name: { type: "string", example: "Computer Science" }
+                        }
+                    }
+                }
+            },
+            CreateStudentRequest: {
+                type: "object",
+                required: ["name", "age", "course_id"],
+                properties: {
+                    name: { type: "string", minLength: 3, maxLength: 50, example: "John Doe" },
+                    age: { type: "integer", minimum: 16, maximum: 100, example: 21 },
+                    course_id: { type: "integer", example: 6 }
+                }
+            },
+            PaginationMeta: {
+                type: "object",
+                required: ["page", "limit", "totalRecords", "totalPages"],
+                properties: {
+                    page: { type: "integer", minimum: 1, example: 1 },
+                    limit: { type: "integer", minimum: 1, maximum: 100, example: 10 },
+                    totalRecords: { type: "integer", example: 100 },
+                    totalPages: { type: "integer", example: 10 }
+                }
             }
         }
     }
