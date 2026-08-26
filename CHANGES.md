@@ -17,7 +17,7 @@
   - `GET /students/{id}` 200 → `data: Student`
   - `POST /students` requestBody → `$ref: CreateStudentRequest` (example kept alongside schema)
 - Intentionally **not** replaced `POST 201 / PATCH 200 / DELETE 200` write responses with `Student` — they return bare `{id,name,age,course_id}` without `courses`; will introduce `StudentWriteResponse` in next iteration.
-- Verify: `node scripts/check-openapi.mjs` + `/api-docs` schemas section.
+- Verify: `node -e "import('./src/docs/openapi.js').then(m=>console.log(Object.keys(m.default.components.schemas)))"` + `/api-docs` schemas section.
 
 ### Checkpoint 9 — Users Docs + Swagger Auto-Auth + Bug Fixes
 **Files:** `src/controllers/user.controller.js`, `src/middleware/auth.middleware.js`, `src/docs/openapi.js`, `app.js`, `tests/user.test.js`
@@ -73,10 +73,18 @@ NODE_ENV=test node scripts/seed-test.js
 NODE_ENV=test node server.js      # then curl /api-docs or endpoints; compare JSON to openapi.js examples
 ```
 
+### Checkpoint 11 — Slice 1: Student Write Schemas + GET Auth Responses + Tags
+**Files:** `src/docs/openapi.js`, `CHANGES.md`
+- Added `components.schemas.StudentWriteResponse` (`id,name,age,course_id nullable`) and `UpdateStudentRequest` (`minProperties:1`, all optional) — fixes pitfall C.
+- Wired `POST 201`, `PATCH 200`, `DELETE 200` to `StudentWriteResponse`; `PATCH` requestBody to `UpdateStudentRequest`.
+- Added missing `401/403` to `GET /students` (pitfall A) and `tags:["Students"]` + `operationId` (`listStudents`, `createStudent`, `getStudentById`, `updateStudent`, `deleteStudent`) to all 5 student operations.
+- Fixed `CHANGES.md` stale `check-openapi.mjs` reference.
+
 ### Current State Snapshot
-- `GET /students` ✅ documented with schemas
-- `GET /students/{id}` ✅ with schemas
-- `POST /students` ✅ request uses CreateStudentRequest
-- `PATCH/DELETE /students/{id}` ✅ documented, correctly left inline (not reusing Student)
-- Users endpoints ✅ documented
-- Test suite ✅ isolated (Postgres + Redis), no dev mutation
+- `GET /students` ✅ `Student[]` + `PaginationMeta` + `401/403` + tags
+- `GET /students/{id}` ✅ `Student`
+- `POST /students` ✅ request `CreateStudentRequest`, response `StudentWriteResponse`
+- `PATCH /students/{id}` ✅ request `UpdateStudentRequest`, response `StudentWriteResponse`
+- `DELETE /students/{id}` ✅ response `StudentWriteResponse`
+- Users endpoints ✅ documented (schemas deferred to next slice)
+- Test suite ✅ isolated

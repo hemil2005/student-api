@@ -16,6 +16,8 @@ const openapiSpecification = {
     paths: {
         "/students": {
             get: {
+                tags: ["Students"],
+                operationId: "listStudents",
                 summary: "Get all students",
                 description: "Returns a paginated list of students with optional filtering, sorting, and searching.",
                 security: [
@@ -117,10 +119,14 @@ const openapiSpecification = {
                                 }
                             }
                         }
-                    }
+                    },
+                    "401": { description: "Authentication required" },
+                    "403": { description: "Insufficient permissions" }
                 }
             },
             post: {
+                tags: ["Students"],
+                operationId: "createStudent",
                 summary: "Create a new student",
                 description: "Creates a student and writes a creation log entry. Requires all fields; duplicates (same name, age, and course) are rejected.",
                 security: [
@@ -148,6 +154,13 @@ const openapiSpecification = {
                         description: "Student created successfully",
                         content: {
                             "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: { type: "string", example: "success" },
+                                        data: { $ref: "#/components/schemas/StudentWriteResponse" }
+                                    }
+                                },
                                 example: {
                                     status: "success",
                                     data: {
@@ -195,6 +208,8 @@ const openapiSpecification = {
         },
         "/students/{id}": {
             get: {
+                tags: ["Students"],
+                operationId: "getStudentById",
                 summary: "Get a student by ID",
                 description: "Returns a single student by their ID.",
                 security: [
@@ -274,6 +289,8 @@ const openapiSpecification = {
                 }
             },
             patch: {
+                tags: ["Students"],
+                operationId: "updateStudent",
                 summary: "Update an existing student",
                 description: "Partially updates a student. Only the provided fields are changed; all fields are optional but validated when present. Invalidates the cached student.",
                 security: [
@@ -297,27 +314,8 @@ const openapiSpecification = {
                     required: true,
                     content: {
                         "application/json": {
-                            schema: {
-                                type: "object",
-                                properties: {
-                                    name: {
-                                        type: "string",
-                                        minLength: 3,
-                                        maxLength: 50
-                                    },
-                                    age: {
-                                        type: "integer",
-                                        minimum: 16,
-                                        maximum: 100
-                                    },
-                                    course_id: {
-                                        type: "integer"
-                                    }
-                                },
-                                example: {
-                                    age: 22
-                                }
-                            }
+                            schema: { $ref: "#/components/schemas/UpdateStudentRequest" },
+                            example: { age: 22 }
                         }
                     }
                 },
@@ -326,6 +324,13 @@ const openapiSpecification = {
                         description: "Student updated successfully",
                         content: {
                             "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: { type: "string", example: "success" },
+                                        data: { $ref: "#/components/schemas/StudentWriteResponse" }
+                                    }
+                                },
                                 example: {
                                     status: "success",
                                     data: {
@@ -381,6 +386,8 @@ const openapiSpecification = {
                 }
             },
             delete: {
+                tags: ["Students"],
+                operationId: "deleteStudent",
                 summary: "Delete a student",
                 description: "Deletes a student by ID and invalidates the cached student. Associated student logs are removed by cascade.",
                 security: [
@@ -405,6 +412,13 @@ const openapiSpecification = {
                         description: "Student deleted successfully",
                         content: {
                             "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: { type: "string", example: "success" },
+                                        data: { $ref: "#/components/schemas/StudentWriteResponse" }
+                                    }
+                                },
                                 example: {
                                     status: "success",
                                     data: {
@@ -849,6 +863,25 @@ const openapiSpecification = {
                     limit: { type: "integer", minimum: 1, maximum: 100, example: 10 },
                     totalRecords: { type: "integer", example: 100 },
                     totalPages: { type: "integer", example: 10 }
+                }
+            },
+            StudentWriteResponse: {
+                type: "object",
+                required: ["id", "name", "age"],
+                properties: {
+                    id: { type: "integer", example: 8 },
+                    name: { type: "string", example: "John Doe" },
+                    age: { type: "integer", example: 21 },
+                    course_id: { type: "integer", nullable: true, example: 6 }
+                }
+            },
+            UpdateStudentRequest: {
+                type: "object",
+                minProperties: 1,
+                properties: {
+                    name: { type: "string", minLength: 3, maxLength: 50, example: "Jane Doe" },
+                    age: { type: "integer", minimum: 16, maximum: 100, example: 22 },
+                    course_id: { type: "integer", nullable: true, example: 6 }
                 }
             }
         }
