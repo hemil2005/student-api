@@ -10,6 +10,7 @@ export function validateCourse(req, res, next) {
     if (!result.success) {
         throw new ValidationError(result.error.issues);
     }
+    req.body = result.data;
     logger.info("Course validated successfully");
     next();
 }

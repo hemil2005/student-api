@@ -80,11 +80,28 @@ NODE_ENV=test node server.js      # then curl /api-docs or endpoints; compare JS
 - Added missing `401/403` to `GET /students` (pitfall A) and `tags:["Students"]` + `operationId` (`listStudents`, `createStudent`, `getStudentById`, `updateStudent`, `deleteStudent`) to all 5 student operations.
 - Fixed `CHANGES.md` stale `check-openapi.mjs` reference.
 
+### Checkpoint 12 — Slice 2: Error Envelope Schemas
+**Files:** `src/docs/openapi.js`, `CHANGES.md`
+- Added `components.schemas.ApiError` (`{status:"error", message}`) and `ErrorResponse` (`{status:"fail", statusCode, message}`) — fixes pitfall D.
+- Wired every error response with a `schema`:
+  - `ApiError` for controller-direct `400 {error, Invalid ID}` (GET/PATCH/DELETE by ID, make-admin).
+  - `ErrorResponse` for all handler errors: `400` validation, `401`, `403`, `404`, `409`, `429`.
+  - `PATCH 400` uses `oneOf: [ApiError, ErrorResponse]` with `examples: {invalidId, validationFailed}` — documents both shapes on one status.
+- Users endpoints now also have schemas on `400/401/403/404/409/429` (previously `example`-only or `description`-only).
+
+### Checkpoint 13 — Slice 3: Courses + User Schemas + Servers + Cleanup
+**Files:** `src/docs/openapi.js`, `src/controllers/course.controller.js`, `src/middleware/course.validation.js`, `src/middleware/user.validation.js`, `CHANGES.md`
+- **Servers:** `http://localhost:3000` → `/` (relative, works behind proxy/any port).
+- **Components:** Added `Course`, `CourseWithStudents`, `CreateCourseRequest`, `UpdateCourseRequest`, `User`, `RegisterRequest`, `LoginRequest`, `LoginResponse`, `RefreshTokenRequest`, `RefreshTokenResponse` (17 schemas total).
+- **Courses docs:** Added `GET /courses` (Course[]), `GET /courses/{id}` (CourseWithStudents), `POST /courses` (201 message+data), `PATCH /courses/{id}`, `DELETE /courses/{id}` — all with `tags:["Courses"]`, `operationId`, `bearerAuth`, `401/403/404` + `409` + `400 ApiError/ErrorResponse` (including `oneOf` for PATCH).
+- **Courses fixes:** Added `isNaN(id) → 400 Invalid course ID` to `getCourseById/updateCourse/deleteCourse`; added `req.body = result.data` to `course.validation.js` and `user.validation.js` (AGENTS #1).
+- **Users refactor:** `register/login/refresh` request/response inline schemas → `$ref` (RegisterRequest, LoginRequest, LoginResponse, RefreshTokenRequest, RefreshTokenResponse); added `tags:["Users"]` + `operationId` (`registerUser`, `loginUser`, `grantAdminAccess`, `refreshToken`); removed empty `parameters:[]`; `make-admin` 200 now has schema with `User` ref.
+- Verify: `17 schemas`, `/courses` + `/courses/{id}` present, `servers:/`, no empty `parameters:[]`, `22/22` tests pass.
+
 ### Current State Snapshot
-- `GET /students` ✅ `Student[]` + `PaginationMeta` + `401/403` + tags
-- `GET /students/{id}` ✅ `Student`
-- `POST /students` ✅ request `CreateStudentRequest`, response `StudentWriteResponse`
-- `PATCH /students/{id}` ✅ request `UpdateStudentRequest`, response `StudentWriteResponse`
-- `DELETE /students/{id}` ✅ response `StudentWriteResponse`
-- Users endpoints ✅ documented (schemas deferred to next slice)
-- Test suite ✅ isolated
+- Students ✅ `Student` + `StudentWriteResponse` + `PaginationMeta` + error envelopes + tags
+- Courses ✅ `Course` + `CourseWithStudents` + `Create/UpdateCourseRequest` + all CRUD + tags
+- Users ✅ `User` + `Register/Login/Refresh` schemas + tags (all error responses have schemas)
+- Servers ✅ relative `/`
+- Errors ✅ `ApiError`/`ErrorResponse` + `oneOf` on dual-shape 400s — generators get typed errors
+- Test suite ✅ isolated (Postgres `student_api_test` + Redis db1)

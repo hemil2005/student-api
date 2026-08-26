@@ -10,5 +10,6 @@ export function validateUser(req, res, next) {
     if (!result.success) {
         throw new ValidationError(result.error.issues);
     }
+    req.body = result.data;
     next();
 }
