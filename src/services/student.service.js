@@ -112,7 +112,6 @@ export async function deleteStudent(id) {
     try {
         const result = await prisma.$transaction(async (tx)=>{
         const deletedStudent = await tx.students.delete({ where: { id } });
-        await createStudentLog(deletedStudent.id, "Student deleted", tx);
         return deletedStudent;
     })
     await redisClient.del(`student:${id}`);

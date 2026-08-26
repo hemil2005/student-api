@@ -71,6 +71,9 @@ export async function createStudent(req, res) {
 
 export async function updateStudent(req, res) {
     const id = Number(req.params.id);
+    if (isNaN(id)) {
+        return res.status(400).json({ status: "error", message: "Invalid student ID" });
+    }
     const data = req.body;
     const updatedStudent = await studentService.updateStudent(id, data);
     res.status(200).json({
@@ -81,6 +84,9 @@ export async function updateStudent(req, res) {
 
 export async function deleteStudent(req, res) {
     const id = Number(req.params.id);
+    if (isNaN(id)) {
+        return res.status(400).json({ status: "error", message: "Invalid student ID" });
+    }
     const deletedStudent = await studentService.deleteStudent(id);
     res.status(200).json({
         "status": "success",

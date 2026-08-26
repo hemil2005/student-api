@@ -110,3 +110,69 @@ describe("GET /students/:id", () => {
         }
     });
 });
+
+describe("PATCH /students/:id", () => {
+    it("should return 400 if the student ID is not a number", async () => {
+        const response = await request(app)
+            .patch("/students/abc")
+            .set("Authorization", `Bearer ${token}`)
+            .send({ age: 22 });
+
+        expect(response.status).toBe(400);
+        expect(response.headers["content-type"]).toMatch(/json/);
+        expect(response.body).toEqual({
+            status: "error",
+            message: "Invalid student ID"
+        });
+    });
+
+    it("should return 200 and update the student with a partial body", async () => {
+        const response = await request(app)
+            .patch(`/students/${studentId}`)
+            .set("Authorization", `Bearer ${token}`)
+            .send({ age: 22 });
+
+        expect(response.status).toBe(200);
+        expect(response.headers["content-type"]).toMatch(/json/);
+        expect(response.body).toHaveProperty("status", "success");
+        expect(response.body.data).toHaveProperty("id", studentId);
+        expect(response.body.data).toHaveProperty("age", 22);
+    });
+});
+
+describe("DELETE /students/:id", () => {
+    it("should return 400 if the student ID is not a number", async () => {
+        const response = await request(app)
+            .delete("/students/abc")
+            .set("Authorization", `Bearer ${token}`);
+
+        expect(response.status).toBe(400);
+        expect(response.headers["content-type"]).toMatch(/json/);
+        expect(response.body).toEqual({
+            status: "error",
+            message: "Invalid student ID"
+        });
+    });
+
+    it("should return 200 and delete an existing student", async () => {
+        const disposable = await prisma.students.create({
+            data: { name: "Delete Me Student", age: 30, course_id: courseId }
+        });
+
+        try {
+            const response = await request(app)
+                .delete(`/students/${disposable.id}`)
+                .set("Authorization", `Bearer ${token}`);
+
+            expect(response.status).toBe(200);
+            expect(response.headers["content-type"]).toMatch(/json/);
+            expect(response.body).toHaveProperty("status", "success");
+            expect(response.body.data).toHaveProperty("id", disposable.id);
+
+            const gone = await prisma.students.findUnique({ where: { id: disposable.id } });
+            expect(gone).toBeNull();
+        } finally {
+            await prisma.student_logs.deleteMany({ where: { student_id: disposable.id } });
+        }
+    });
+});
