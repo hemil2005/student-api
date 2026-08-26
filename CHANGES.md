@@ -98,10 +98,34 @@ NODE_ENV=test node server.js      # then curl /api-docs or endpoints; compare JS
 - **Users refactor:** `register/login/refresh` request/response inline schemas → `$ref` (RegisterRequest, LoginRequest, LoginResponse, RefreshTokenRequest, RefreshTokenResponse); added `tags:["Users"]` + `operationId` (`registerUser`, `loginUser`, `grantAdminAccess`, `refreshToken`); removed empty `parameters:[]`; `make-admin` 200 now has schema with `User` ref.
 - Verify: `17 schemas`, `/courses` + `/courses/{id}` present, `servers:/`, no empty `parameters:[]`, `22/22` tests pass.
 
+### Checkpoint 14 — OpenAPI Split: Slices 0-2 (Schemas + Paths Extraction)
+**Files:** `src/docs/schemas/students.js`, `src/docs/schemas/courses.js`, `src/docs/schemas/users.js`, `src/docs/schemas/common.js` (new), `src/docs/paths/students.js`, `src/docs/paths/courses.js`, `src/docs/paths/users.js` (new)
+- Slice 0: Captured baseline outside repo at `C:\Users\hemil\AppData\Local\Temp\opencode\openapi-baseline.json` (17 schemas, 8 paths, 14 operations) — verified before any move.
+- Slice 1: Extracted 17 schemas into 4 resource files (5 students, 4 courses, 6 users, 2 common) — verified deep-equal to baseline, `openapi.js` still unchanged.
+- Slice 2: Extracted 8 paths into 3 resource files (2 students, 2 courses, 4 users) — generated via `JSON.stringify(baseline.paths)` to avoid transcription errors, verified `operationId`/tags/content match baseline.
+
+### Checkpoint 15 — OpenAPI Assembly (Slice 3)
+**Files:** `src/docs/openapi.js`
+- Replaced large inline `paths` and `components.schemas` with assembly:
+  ```js
+  import studentPaths from "./paths/students.js"; import coursePaths from "./paths/courses.js"; import userPaths from "./paths/users.js";
+  import studentSchemas from "./schemas/students.js"; import courseSchemas from "./schemas/courses.js"; import userSchemas from "./schemas/users.js"; import commonSchemas from "./schemas/common.js";
+  // paths: { ...studentPaths, ...coursePaths, ...userPaths }
+  // schemas: { ...studentSchemas, ...courseSchemas, ...userSchemas, ...commonSchemas }
+  ```
+- Preserved `openapi`, `info`, `servers: [{url:"/"}]`, `securitySchemes.bearerAuth`.
+- Verification: deep-equal `assembled spec === baseline` — **PASS**; `17 schemas, 8 paths, 14 ops, 76 $refs` unchanged; `npm test 22/22`, `/api-docs 200`.
+
+### Checkpoint 16 — Slice 4: Verification & Preservation (Build Mode)
+**Files:** `CHANGES.md` (docs only), verified `src/docs/openapi.js` assembly
+- **Contract preservation:** Deep-equal `current === baseline` — **PASS** (outside-repo baseline `openapi-baseline.json`).
+- **Counts:** `17 schemas` (`Student, CreateStudentRequest, PaginationMeta, StudentWriteResponse, UpdateStudentRequest, Course, CourseWithStudents, CreateCourseRequest, UpdateCourseRequest, User, RegisterRequest, LoginRequest, LoginResponse, RefreshTokenRequest, RefreshTokenResponse, ApiError, ErrorResponse`), `8 paths` (`/students`, `/students/{id}`, `/courses`, `/courses/{id}`, `/users/register`, `/users/login`, `/users/make-admin/{id}`, `/users/auth/refresh`), `14 operations`, `76 $refs`, `63 responses`, `124 examples`, `3 tag groups`.
+- **Security & metadata:** `servers:[{url:"/"}]`, `bearerAuth http/bearer/JWT`, all `tags`, `operationId`s, `security`, `requestBody`/`responses`/`examples` preserved.
+- **Runtime:** `npm test 22/22` — PASS; `GET /api-docs/ 200` — PASS, `swagger-ui-init.js` contains `Students/Courses/Users` grouping.
+- **Production behavior:** No controllers/services/routes/middleware changed — OpenAPI reorganization only.
+
 ### Current State Snapshot
-- Students ✅ `Student` + `StudentWriteResponse` + `PaginationMeta` + error envelopes + tags
-- Courses ✅ `Course` + `CourseWithStudents` + `Create/UpdateCourseRequest` + all CRUD + tags
-- Users ✅ `User` + `Register/Login/Refresh` schemas + tags (all error responses have schemas)
-- Servers ✅ relative `/`
-- Errors ✅ `ApiError`/`ErrorResponse` + `oneOf` on dual-shape 400s — generators get typed errors
-- Test suite ✅ isolated (Postgres `student_api_test` + Redis db1)
+- Docs structure ✅ `src/docs/openapi.js` (assembly) + `paths/*` (3) + `schemas/*` (4) — maintainable, not over-engineered
+- Contract ✅ Deep-equal to Slice 0 baseline — Swagger UI observable docs equivalent before/after
+- All docs features ✅ 17 schemas, tags, operationIds, security, $refs, examples preserved
+- Test suite ✅ `22/22` isolated (Postgres `student_api_test` + Redis `1`)
