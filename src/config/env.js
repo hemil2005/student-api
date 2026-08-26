@@ -18,7 +18,10 @@ const config = {
         password: process.env.DB_PASSWORD,
     },
     redis: {
-        url: process.env.REDIS_URL,
+        url:
+            process.env.NODE_ENV === "test"
+                ? process.env.REDIS_URL_TEST
+                : process.env.REDIS_URL,
     }
 }
 
