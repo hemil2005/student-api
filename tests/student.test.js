@@ -65,4 +65,29 @@ describe("GET /students/:id", () => {
         const response = await request(app).get("/students/8");
         expect(response.status).toBe(401);
     });
+
+    it("should return 404 if the student does not exist", async () => {
+        const response = await request(app)
+            .get("/students/999999")
+            .set("Authorization", `Bearer ${token}`);
+
+        expect(response.status).toBe(404);
+        expect(response.headers["content-type"]).toMatch(/json/);
+        expect(response.body).toHaveProperty("message", "Student not found");
+        expect(response.body).toHaveProperty("statusCode", 404);
+        expect(response.body).toHaveProperty("status", "fail");
+    });
+
+    it("should return 400 if the student ID is not a number", async () => {
+        const response = await request(app)
+            .get("/students/abc")
+            .set("Authorization", `Bearer ${token}`);
+
+        expect(response.status).toBe(400);
+        expect(response.headers["content-type"]).toMatch(/json/);
+        expect(response.body).toEqual({
+            status: "error",
+            message: "Invalid student ID"
+        });
+    });
 });
