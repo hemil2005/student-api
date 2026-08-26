@@ -6,6 +6,8 @@ import prisma from "../src/config/prisma.js";
 import { createJWT } from "../src/utils/jwt.js";
 
 let token;
+let studentId;
+let courseId;
 
 beforeAll(async () => {
     if (!redisClient.isOpen) {
@@ -16,9 +18,21 @@ beforeAll(async () => {
         password: "123456"
     });
     token = response.body.token;
+
+    const course = await prisma.courses.create({
+        data: { name: `Test Course ${Date.now()}` }
+    });
+    courseId = course.id;
+    const student = await prisma.students.create({
+        data: { name: "Test Student", age: 20, course_id: courseId }
+    });
+    studentId = student.id;
 });
 
 afterAll(async () => {
+    await prisma.student_logs.deleteMany({ where: { student_id: studentId } });
+    await prisma.students.deleteMany({ where: { id: studentId } });
+    await prisma.courses.deleteMany({ where: { id: courseId } });
     if (redisClient.isOpen) {
         await redisClient.quit();
     }
@@ -27,19 +41,19 @@ afterAll(async () => {
 describe("GET /students/:id", () => {
     it("should return 200 and the student", async () => {
         const response = await request(app)
-            .get("/students/8")
+            .get(`/students/${studentId}`)
             .set("Authorization", `Bearer ${token}`);
 
         expect(response.status).toBe(200);
         expect(response.headers["content-type"]).toMatch(/json/);
         expect(response.body).toHaveProperty("status", "success");
         expect(response.body).toHaveProperty("data");
-        expect(response.body.data).toHaveProperty("id");
-        expect(response.body.data).toHaveProperty("name");
+        expect(response.body.data).toHaveProperty("id", studentId);
+        expect(response.body.data).toHaveProperty("name", "Test Student");
     });
 
     it("should return 401 if authorization header is missing", async () => {
-        const response = await request(app).get("/students/8");
+        const response = await request(app).get(`/students/${studentId}`);
         expect(response.status).toBe(401);
     });
 
@@ -83,7 +97,7 @@ describe("GET /students/:id", () => {
         try {
             const restrictedToken = createJWT({ id: user.id, role: user.role });
             const response = await request(app)
-                .get("/students/8")
+                .get(`/students/${studentId}`)
                 .set("Authorization", `Bearer ${restrictedToken}`);
 
             expect(response.status).toBe(403);

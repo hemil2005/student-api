@@ -6,7 +6,10 @@ const config = {
     jwtSecret: process.env.JWT_SECRET,
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
     nodeEnv: process.env.NODE_ENV || "development",
-    databaseUrl: process.env.DATABASE_URL,
+    databaseUrl:
+        process.env.NODE_ENV === "test"
+            ? process.env.DATABASE_URL_TEST
+            : process.env.DATABASE_URL,
     db: {
         host: process.env.DB_HOST,
         port: process.env.DB_PORT,
@@ -23,7 +26,11 @@ const checkConfig = () => {
     const missingKeys = [];
     if (!config.jwtSecret) missingKeys.push("JWT_SECRET");
     if (!config.jwtRefreshSecret) missingKeys.push("JWT_REFRESH_SECRET");
-    if (!config.databaseUrl) missingKeys.push("DATABASE_URL");
+    if (config.nodeEnv === "test" && !process.env.DATABASE_URL_TEST) {
+        missingKeys.push("DATABASE_URL_TEST");
+    } else if (config.nodeEnv !== "test" && !config.databaseUrl) {
+        missingKeys.push("DATABASE_URL");
+    }
 
     if (missingKeys.length > 0) {
         throw new Error(`Missing required environment variables: ${missingKeys.join(", ")}`);
