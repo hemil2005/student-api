@@ -14,6 +14,9 @@ export async function loginUser(req, res) {
 
 export async function grantAdminAccess(req, res) {
     const userID = Number(req.params.id);
+    if (isNaN(userID)) {
+        return res.status(400).json({ status: "error", message: "Invalid user ID" });
+    }
     const updatedUser = await userService.grantAdminAccess(userID);
     res.status(200).json({
         message: "Admin access granted successfully",

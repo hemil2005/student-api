@@ -31,7 +31,12 @@ export async function authenticateRefresh(req, res, next) {
         throw new UnauthorizedError("Refresh token is required");
     }
 
-    const decodedToken = verifyRefreshJWT(refresh_token);
+    let decodedToken;
+    try {
+        decodedToken = verifyRefreshJWT(refresh_token);
+    } catch (error) {
+        throw new UnauthorizedError("Invalid or expired refresh token");
+    }
     req.user = decodedToken;
     logger.info(`Refresh token valid for user:${decodedToken.id}`);
     next();
