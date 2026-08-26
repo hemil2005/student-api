@@ -124,8 +124,16 @@ NODE_ENV=test node server.js      # then curl /api-docs or endpoints; compare JS
 - **Runtime:** `npm test 22/22` — PASS; `GET /api-docs/ 200` — PASS, `swagger-ui-init.js` contains `Students/Courses/Users` grouping.
 - **Production behavior:** No controllers/services/routes/middleware changed — OpenAPI reorganization only.
 
+### Checkpoint 17 — Final OpenAPI Guard (`tests/openapi.test.js`)
+**Files:** `tests/openapi.test.js` (new)
+- **Intent:** Learner-owned verification that a future refactor cannot silently remove `/api-docs` or a schema/path without breaking the build.
+- **Spec assertions (11):** `openapi` version exists, `paths["/students"]`, `paths["/courses"]`, `paths["/users/login"]`, `components.securitySchemes.bearerAuth` (`type:http`, `scheme:bearer`), `schemas.Student`, `schemas.Course`, `schemas.User`, `schemas.ApiError`, `schemas.ErrorResponse`, every operation has `operationId`.
+- **Route assertion (1):** `GET /api-docs/` via supertest+`app.js:38` returns `200` + `text/html` + `swagger`.
+- **Why small:** No full OpenAPI validator — just the 11 enumerated DoD checks plus one liveness check for Swagger UI.
+- **Verify:** `npx vitest run tests/openapi.test.js` → 12/12; `npm test` → 34/34 (22 existing + 12 new).
+
 ### Current State Snapshot
-- Docs structure ✅ `src/docs/openapi.js` (assembly) + `paths/*` (3) + `schemas/*` (4) — maintainable, not over-engineered
-- Contract ✅ Deep-equal to Slice 0 baseline — Swagger UI observable docs equivalent before/after
+- Docs structure ✅ `src/docs/openapi.js` (assembly) + `paths/*` (3) + `schemas/*` (4)
+- Contract ✅ Deep-equal to baseline + guarded by `tests/openapi.test.js`
 - All docs features ✅ 17 schemas, tags, operationIds, security, $refs, examples preserved
-- Test suite ✅ `22/22` isolated (Postgres `student_api_test` + Redis `1`)
+- Test suite ✅ `34/34` isolated (Postgres `student_api_test` + Redis `1`)
