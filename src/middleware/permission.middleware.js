@@ -24,7 +24,7 @@ const permissions = {
 export function requirePermission(permission) {
     return (req, res, next) => {
         logger.info(`Permission check: ${permission}`);
-        const userPermissions = permissions[req.user.role];
+        const userPermissions = permissions[req.user?.role];
 
         if (!userPermissions) {
             return next(new ForbiddenError("Insufficient permissions"));
