@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
 import app from "../app.js";
 import redisClient from "../src/config/redis.js";
+import prisma from "../src/config/prisma.js";
+import { createJWT } from "../src/utils/jwt.js";
 
 let token;
 
@@ -89,5 +91,33 @@ describe("GET /students/:id", () => {
             status: "error",
             message: "Invalid student ID"
         });
+    });
+
+    it("should return 403 if the user's role lacks student:read", async () => {
+        const email = "no-perm-test@example.com";
+        await prisma.users.deleteMany({ where: { email } });
+        const user = await prisma.users.create({
+            data: {
+                name: "No Perm Test User",
+                email,
+                password: "not-used-for-login",
+                role: "viewer"
+            }
+        });
+
+        try {
+            const restrictedToken = createJWT({ id: user.id, role: user.role });
+            const response = await request(app)
+                .get("/students/8")
+                .set("Authorization", `Bearer ${restrictedToken}`);
+
+            expect(response.status).toBe(403);
+            expect(response.headers["content-type"]).toMatch(/json/);
+            expect(response.body).toHaveProperty("message", "Insufficient permissions");
+            expect(response.body).toHaveProperty("statusCode", 403);
+            expect(response.body).toHaveProperty("status", "fail");
+        } finally {
+            await prisma.users.deleteMany({ where: { email } });
+        }
     });
 });
