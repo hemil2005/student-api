@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
-import app from "../app.js";
-import redisClient from "../src/config/redis.js";
-import prisma from "../src/config/prisma.js";
-import { createJWT } from "../src/utils/jwt.js";
+import app from "../../../app.js";
+import redisClient from "../../config/redis.js";
+import prisma from "../../config/prisma.js";
+import { createJWT } from "../../utils/jwt.js";
+
 
 let token;
 let studentId;

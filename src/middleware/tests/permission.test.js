@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("../src/logger/logger.js", () => ({
+vi.mock("../../logger/logger.js", () => ({
     default: {
         info: vi.fn(),
         warn: vi.fn(),
@@ -8,8 +8,9 @@ vi.mock("../src/logger/logger.js", () => ({
     }
 }));
 
-import ForbiddenError from "../src/errors/ForbiddenError.js";
-import { requirePermission } from "../src/middleware/permission.middleware.js";
+import ForbiddenError from "../../errors/ForbiddenError.js";
+import { requirePermission } from "../permission.middleware.js";
+
 
 function runMiddleware(permission, role) {
     const middleware = requirePermission(permission);

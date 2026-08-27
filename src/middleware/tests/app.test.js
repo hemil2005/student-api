@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
-import app from "../app.js";
+import app from "../../../app.js";
+
 
 describe("GET /", () => {
     it("should return 200 and the welcome message for the home directory", async () => {

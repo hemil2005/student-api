@@ -19,12 +19,7 @@ router.get(
     passport.authenticate("google", {
         session: false
     }),
-    (req, res) => {
-        res.json({
-            message: "Google authentication successful",
-            profile: req.user
-        });
-    }
+    userController.googleLogin
 );
 router.post('/register', rateLimiter.registerLimiter, validateUser, userController.registerUser);
 router.post('/login', rateLimiter.loginLimiter, userController.loginUser);

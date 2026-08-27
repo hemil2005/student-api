@@ -32,6 +32,28 @@ export async function registerUser(user) {
     logger.info("User registered successfully");
     return result;
 }
+export async function generateUserTokens(user) {
+    const token = createJWT({
+        id: user.id,
+        role: user.role
+    });
+    const refresh_token = createRefreshJWT({
+        id: user.id,
+        role: user.role
+    });
+    await redisClient.set(`user:${user.id}`, JSON.stringify(refresh_token), { EX: 30 * 24 * 60 * 60 });
+    return {
+        token,
+        refresh_token,
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        },
+    };
+}
+
 export async function loginUser(email, password) {
     const result = await prisma.users.findUnique({
         where: {
@@ -52,31 +74,9 @@ export async function loginUser(email, password) {
     if (!isPasswordValid) {
         throw new UnauthorizedError("Invalid email or password");
     }
-    // return {
-    //     id: result.id,
-    //     email: result.email,
-    //     name: result.name
-    // };
-    const token = createJWT({
-        id: result.id,
-        role: result.role
-    });
-    const refresh_token = createRefreshJWT({
-        id: result.id,
-        role: result.role
-    });
-    await redisClient.set(`user:${result.id}`, JSON.stringify(refresh_token), { EX: 30 * 24 * 60 * 60 });
-    return {
-        token,
-        refresh_token,
-        user: {
-            id: result.id,
-            name: result.name,
-            email: result.email,
-            role: result.role
-        },
-    };
+    return await generateUserTokens(result);
 }
+
 export async function grantAdminAccess(userID){
     logger.info("Granting admin access to user");
     const user = await prisma.users.findUnique({where: {id:userID}});

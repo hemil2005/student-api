@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
-import openapiSpecification from "../src/docs/openapi.js";
-import app from "../app.js";
+import openapiSpecification from "../../docs/openapi.js";
+import app from "../../../app.js";
+
 
 describe("openapi contract", () => {
     it("has OpenAPI version", () => {
