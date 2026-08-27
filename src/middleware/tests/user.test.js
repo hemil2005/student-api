@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
 import jwt from "jsonwebtoken";
-import app from "../app.js";
-import redisClient from "../src/config/redis.js";
-import config from "../src/config/env.js";
+import app from "../../../app.js";
+import redisClient from "../../config/redis.js";
+import config from "../../config/env.js";
 
 let adminToken;
 

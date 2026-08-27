@@ -5,6 +5,8 @@ import courseRoutes from './src/routes/course.route.js'
 import { errorHandler } from './src/middleware/error.middleware.js'
 import swaggerUi from "swagger-ui-express";
 import openapiSpecification from "./src/docs/openapi.js";
+import passport from "./src/config/passport.js"
+
 const app = express();
 app.use(express.json());
 const swaggerAutoAuthScript = `
@@ -34,6 +36,7 @@ const swaggerAutoAuthScript = `
 })();
 `;
 
+app.use(passport.initialize());
 app.use(
     "/api-docs",
     swaggerUi.serve,
@@ -45,7 +48,8 @@ app.use(
 app.get('/', (req, res) => {
     res.json({ message: "Welcome to the Student API Home Directory!" });
 });
-
+app.use(express.json());
+app.use(passport.initialize());
 app.use('/students', studentRoutes);
 app.use('/courses', courseRoutes);
 app.use('/users', userRoutes);
