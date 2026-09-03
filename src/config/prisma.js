@@ -5,7 +5,13 @@ import logger from "../logger/logger.js";
 import config from "./env.js";
 
 const { Pool } = pg;
-const pool = new Pool({ connectionString: config.databaseUrl });
+const pool = new Pool({
+    connectionString: config.databaseUrl,
+    ssl: {
+        rejectUnauthorized: true,
+        ca: fs.readFileSync(new URL("../../ca.pem", import.meta.url)),
+    },
+});
 const adapter = new PrismaPg(pool);
 
 if (!globalThis.prisma) {
