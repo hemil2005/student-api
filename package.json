@@ -10,7 +10,9 @@
     "test:watch": "vitest watch",
     "predev": "prisma generate",
     "dev": "nodemon server.js",
-    "auto": "node --watch server.js"
+    "auto": "node --watch server.js",
+    "start": "node server.js",
+    "db:migrate:deploy": "prisma migrate deploy"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +22,7 @@
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "bcrypt": "^6.0.0",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.6.2",
     "helmet": "^8.3.0",
@@ -36,7 +39,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "dotenv": "^17.4.2",
     "prisma": "^7.9.1",
     "supertest": "^7.2.2",
     "vitest": "^4.1.10"

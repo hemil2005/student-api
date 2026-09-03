@@ -10,13 +10,6 @@ const config = {
         process.env.NODE_ENV === "test"
             ? process.env.DATABASE_URL_TEST
             : process.env.DATABASE_URL,
-    db: {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT,
-        name: process.env.DB_NAME,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-    },
     google: {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -27,6 +20,10 @@ const config = {
             process.env.NODE_ENV === "test"
                 ? process.env.REDIS_URL_TEST
                 : process.env.REDIS_URL,
+    },
+    swagger: {
+        autoAuthEmail: process.env.SWAGGER_AUTO_AUTH_EMAIL,
+        autoAuthPassword: process.env.SWAGGER_AUTO_AUTH_PASSWORD,
     }
 }
 
@@ -34,13 +31,26 @@ const checkConfig = () => {
     const missingKeys = [];
     if (!config.jwtSecret) missingKeys.push("JWT_SECRET");
     if (!config.jwtRefreshSecret) missingKeys.push("JWT_REFRESH_SECRET");
-    if (!config.google.clientId) missingKeys.push("GOOGLE_CLIENT_ID");
-    if (!config.google.clientSecret) missingKeys.push("GOOGLE_CLIENT_SECRET");
-    if (!config.google.callbackUrl) missingKeys.push("GOOGLE_CALLBACK_URL");
     if (config.nodeEnv === "test" && !process.env.DATABASE_URL_TEST) {
         missingKeys.push("DATABASE_URL_TEST");
     } else if (config.nodeEnv !== "test" && !config.databaseUrl) {
         missingKeys.push("DATABASE_URL");
+    }
+    if (config.nodeEnv === "test" && !process.env.REDIS_URL_TEST) {
+        missingKeys.push("REDIS_URL_TEST");
+    } else if (config.nodeEnv !== "test" && !config.redis.url) {
+        missingKeys.push("REDIS_URL");
+    }
+
+    const hasAnyGoogleKey = Boolean(
+        config.google.clientId ||
+        config.google.clientSecret ||
+        config.google.callbackUrl
+    );
+    if (hasAnyGoogleKey) {
+        if (!config.google.clientId) missingKeys.push("GOOGLE_CLIENT_ID");
+        if (!config.google.clientSecret) missingKeys.push("GOOGLE_CLIENT_SECRET");
+        if (!config.google.callbackUrl) missingKeys.push("GOOGLE_CALLBACK_URL");
     }
 
     if (missingKeys.length > 0) {

@@ -2,14 +2,27 @@ import express from 'express'
 import studentRoutes from './src/routes/student.route.js'
 import userRoutes from './src/routes/user.route.js'
 import courseRoutes from './src/routes/course.route.js'
+import healthRoutes from './src/routes/health.route.js'
 import { errorHandler } from './src/middleware/error.middleware.js'
 import swaggerUi from "swagger-ui-express";
 import openapiSpecification from "./src/docs/openapi.js";
 import passport from "./src/config/passport.js"
+import config from "./src/config/env.js";
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(express.json());
-const swaggerAutoAuthScript = `
+
+const swaggerUiOptions = {
+    swaggerOptions: { persistAuthorization: true }
+};
+
+if (
+    config.nodeEnv === "development" &&
+    config.swagger?.autoAuthEmail &&
+    config.swagger?.autoAuthPassword
+) {
+    swaggerUiOptions.customJsStr = `
 (function waitForUi() {
     if (window.ui && window.ui.preauthorizeApiKey) {
         const stored = window.localStorage.getItem("bearerAuth");
@@ -18,8 +31,8 @@ const swaggerAutoAuthScript = `
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    email: "hemil2@gmail.com",
-                    password: "123456"
+                    email: ${JSON.stringify(config.swagger.autoAuthEmail)},
+                    password: ${JSON.stringify(config.swagger.autoAuthPassword)}
                 })
             })
                 .then((res) => res.json())
@@ -35,21 +48,18 @@ const swaggerAutoAuthScript = `
     }
 })();
 `;
+}
 
 app.use(passport.initialize());
 app.use(
     "/api-docs",
     swaggerUi.serve,
-    swaggerUi.setup(openapiSpecification, {
-        swaggerOptions: { persistAuthorization: true },
-        customJsStr: swaggerAutoAuthScript
-    })
+    swaggerUi.setup(openapiSpecification, swaggerUiOptions)
 );
 app.get('/', (req, res) => {
     res.json({ message: "Welcome to the Student API Home Directory!" });
 });
-app.use(express.json());
-app.use(passport.initialize());
+app.use('/health', healthRoutes);
 app.use('/students', studentRoutes);
 app.use('/courses', courseRoutes);
 app.use('/users', userRoutes);

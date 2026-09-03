@@ -1,21 +1,37 @@
 import app from './app.js';
-import pool from './src/config/database.js';
+import prisma from './src/config/prisma.js';
 import redisClient from './src/config/redis.js';
 import config from './src/config/env.js';
+import logger from './src/logger/logger.js';
+import { createShutdownHandler } from './src/utils/shutdown.js';
 
 async function start() {
     // Verify DB connection
-    await pool.query("SELECT NOW();");
+    await prisma.$queryRaw`SELECT 1`;
 
     // Connect Redis before the server starts accepting requests
     await redisClient.connect();
 
-    app.listen(config.port, () => {
-        console.log(`Server is running on port ${config.port}`);
+    const server = app.listen(config.port, () => {
+        logger.info(`Server is running on port ${config.port}`);
     });
+
+    const shutdown = createShutdownHandler({
+        server,
+        prisma,
+        redisClient,
+        logger
+    });
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+
+    return { server, shutdown };
 }
 
 start().catch((err) => {
-    console.error("Failed to start server:", err);
+    logger.error(`Failed to start server: ${err?.message || err}`);
     process.exit(1);
-});
+});
+
+export { start };

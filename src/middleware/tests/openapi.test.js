@@ -67,4 +67,10 @@ describe("GET /api-docs", () => {
         expect(res.headers["content-type"]).toMatch(/html/);
         expect(res.text).toMatch(/swagger/i);
     });
+
+    it("does not leak credentials or auto-auth script outside development", async () => {
+        const res = await request(app).get("/api-docs/");
+        expect(res.text).not.toContain("hemil2@gmail.com");
+        expect(res.text).not.toContain("waitForUi");
+    });
 });
